@@ -13,21 +13,31 @@
 #	$a1
 #	$a2
 #	$a3
-
+#
 #	$v0 	syscall parameter
 #
-#	$s1	current player
-#	$s2
+#	$s0	current player
+#	$s1	player1 symbol
+#	$s2	player2 symbol
 #	$s3
 #	$s4
 #	$s5
 #	$s6
 #	$s7	moves remaining
-
+#
 #		printboard
 #		---------------
-#	$a0	memmory address of start of board array
+#	$s0	memmory address of start of board array
 #
+#		printboard_row
+#		---------------
+#	$s0	memory address of start of row
+#
+#		change_turns
+#		---------------
+#	$a0	current player
+#	$a1	player 1
+#	$a2	player 2
 #
 #		getinput
 #		--------------
@@ -50,7 +60,7 @@ print_space:
 	syscall
 	jr	$ra
 
-print_board_up:
+print_board_up:  	# TODO - rename this to something more clear
 	li 	$v0, 4
 	la 	$a0, boardup	# load address of boardup into argument 0 for system call to print
 	syscall
@@ -124,7 +134,7 @@ printboard:
 	jal 	printboard_row
 
 	lw	$ra, 0($sp)	#restore save zero and return address registers
-	lw	$s0, 4($s0)
+	lw	$s0, 4($sp)
 	addi	$sp, $sp, 8
 	jr 	$ra		# return
 
@@ -160,20 +170,23 @@ playmove:
 	sw	$s0, 0($t2)	# write the current player into the address in $t2
 
 	lw	$ra, 0($sp)
-	lw	$s0, 0($sp)
+	lw	$s0, 4($sp)
 	jr 	$ra		# return
 
 
 changeturns:
+		# $a0 = current_player
+		# $a1 = player 1 symbol
+		# $a2 = player 2 symbol
 
-	beq 	$s4, $s5, currentPlayerIsX	# if current_player = X goto currentPlayerIsX
-	move	$s4, $s5			# change current player to x
-	j 	endif				# got endif
+	beq 	$a0, $a1, current_player_is_player_one	#if current player = player1 goto current_player_is_one
+	move	$v0, $a1	#return player 1
+	j 	endif_current_player
 
-currentPlayerIsX:
-	move 	$s4, $s6			# change current player to o
+current_player_is_player_one:
+	move 	$v0, $a2	#return player 2
 
-endif:
+endif_current_player:
 	jr	$ra				# return
 
 main:
@@ -185,30 +198,29 @@ main:
 	addi	$s7, $zero, 9   # int moves_remaining = 9
 
 	la	$t1, playerx	# load memmory address of playerx into $t1
-	lw	$s5, 0($t1)	# $s5 is global player x
+	lw	$s1, 0($t1)	# $s1 is player x
 	la 	$t1, playero	# load memmory address of playero into $t1
-	lw	$s6, 0($t1)	# $s6 is global player o
+	lw	$s2, 0($t1)	# $s2 is player o
 
-				# TODO::  Chanage this so changeturns takes in 3 parameters. and then place $s5 into $a1, and $s6 into $a2
-
-	move	$s4, $s5	# $s4 is global currentplayer starts as X
-
-
+	move	$s0, $s2	# $s0 is currentplayer & starts as X
 
 loop:
 	la 	$a0, board	#load start of board array into
 
 	jal 	printboard	#call printboard(board_array)
 
-
-	move	$a0, $s4	# place current player into
+	move	$a0, $s0 	# place current player into argument zero
 	jal	playmove	# call function playmove(currentPlayer)
 
 	addi 	$s7, $s7, -1	# moves_remaing = moves_remaining - 1
 
 	ble	$s7, $zero, exitloop	# if moves_remaing <= 0 goto exit the loop
 
+	move	$a0, $s0
+	move	$a1, $s1
+	move 	$a2, $s2
 	jal	changeturns	# call function changeturns()
+	move	$s0, $v0
 	j	loop		# goto loop
 
 exitloop:

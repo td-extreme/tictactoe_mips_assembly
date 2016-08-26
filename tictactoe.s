@@ -140,10 +140,11 @@ getinput:
 	jr 	$ra			# return
 
 playmove:
-	move 	$s3, $ra	# not the proper way to do this.
-				# Todo:: change this so that $sp is ajusted and $ra is stored on stack
-				# and then moved back into $ra before jr is called
-	move 	$s1, $a0
+	addi 	$sp, $sp -8
+	sw	$ra, 0($sp)
+	sw	$s0, 4($sp)
+
+	move 	$s0, $a0	# placed current player agrument into saved reg 0
 	jal 	getinput	# call getinput return value will be in $v0
 	addi	$t3, $v0, -1	# set $t3 to the user input minus 1
 
@@ -152,13 +153,15 @@ playmove:
 	mult 	$t3, $t1	# multiple user choice by 4
 	mflo	$t2		# multiplication gets put into a special register move the results into $t2
 
-	la	$t3, board	# load the address of board array into $t3
+	la	$t4, board	# load the address of board array into $t4
 
-	add	$t2, $t2, $t3	# add the offset of user choice to the base address of the array
+	add	$t2, $t2, $t4	# add the offset of user choice to the base address of the array
 
-	sw	$s1, 0($t2)	# write the current player into the address in $t2
+	sw	$s0, 0($t2)	# write the current player into the address in $t2
 
-	jr 	$s3		# return
+	lw	$ra, 0($sp)
+	lw	$s0, 0($sp)
+	jr 	$ra		# return
 
 
 changeturns:

@@ -106,7 +106,7 @@ printboard_row:
 	jal	print_space
 
 	li 	$v0, 4		# this is set to tell the system call that it should print a char array
-	addi 	$a0, $s0, 8	#space 3
+	addi 	$a0, $s0, 8	#space 3 of row
 	syscall
 
 	jal	print_new_line
@@ -140,7 +140,7 @@ printboard:
 
 getinput:
 
-	la 	$a0, getmovepromt	# load address of getmoveprompt into arg 0 for system call
+	la 	$a0, str_getmovepromt	# load address of getmoveprompt into arg 0 for system call
 	li 	$v0, 4			# set it so system call will print char array
 	syscall
 
@@ -171,6 +171,7 @@ playmove:
 
 	lw	$ra, 0($sp)
 	lw	$s0, 4($sp)
+	addi	$sp, $sp 8
 	jr 	$ra		# return
 
 
@@ -189,11 +190,42 @@ current_player_is_player_one:
 endif_current_player:
 	jr	$ra				# return
 
-main:
+
+print_display:
+
+	addi	$sp, $sp -4
+	sw	$ra, 0($sp)
 
 	li 	$v0, 4		# set system call to print char array
-	la 	$a0, title	# load address of title into arg 0 for system call
+	la 	$a0, str_title	# load address of title into arg 0 for system call
 	syscall
+
+
+	la	$v0, 4
+	la 	$a0, str_legend
+
+	syscall
+
+	la 	$a0, key	#load start of board array into
+	jal 	printboard	#call printboard(board_array)
+
+	la	$v0, 4
+	la	$a0, newline
+	syscall
+
+	la	$v0, 4
+	la 	$a0, str_board
+	syscall
+
+	la 	$a0, board	#load start of board array into
+	jal 	printboard	#call printboard(board_array)
+
+	lw	$ra, 0($sp)
+	addi	$sp, $sp 4
+
+	jr	$ra
+main:
+
 
 	addi	$s7, $zero, 9   # int moves_remaining = 9
 
@@ -205,9 +237,8 @@ main:
 	move	$s0, $s2	# $s0 is currentplayer & starts as X
 
 loop:
-	la 	$a0, board	#load start of board array into
 
-	jal 	printboard	#call printboard(board_array)
+	jal	print_display
 
 	move	$a0, $s0 	# place current player into argument zero
 	jal	playmove	# call function playmove(currentPlayer)
@@ -234,15 +265,18 @@ exitloop:
 
 
 	.data
-title:		.asciiz "\nTic Tac Toe\n\n"
+str_title:	.asciiz "\nTic Tac Toe\n\n"
+str_legend:	.asciiz "\n   Legend\n"
+str_board:	.asciiz "\n   Game\n"
 space:		.asciiz " "
 boardup:	.asciiz	"|"
 newline:	.asciiz "\n"
 boardmiddle:	.asciiz "---|---|---"
 
-getmovepromt:	.asciiz "\nPlease enter a move: "
+str_getmovepromt:	.asciiz "\nPlease enter a move: "
 
 playerx:	.word 'X'
 playero:	.word 'O'
 
-board:		.word '1', '2', '3', '4', '5', '6', '7', '8', '9'
+board:		.word ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '
+key:		.word '1', '2', '3', '4', '5', '6', '7', '8', '9'

@@ -200,7 +200,6 @@ print_display:
 	la 	$a0, str_title	# load address of title into arg 0 for system call
 	syscall
 
-
 	la	$v0, 4
 	la 	$a0, str_legend
 
@@ -226,7 +225,6 @@ print_display:
 	jr	$ra
 main:
 
-
 	addi	$s7, $zero, 9   # int moves_remaining = 9
 
 	la	$t1, playerx	# load memmory address of playerx into $t1
@@ -251,17 +249,14 @@ loop:
 	move	$a1, $s1
 	move 	$a2, $s2
 	jal	changeturns	# call function changeturns()
-	move	$s0, $v0
+	move	$s0, $v0	# set current_player to return of changeturns()
 	j	loop		# goto loop
 
 exitloop:
-	la	$a0, board	# load address of board array to arg 0 for printboard()
-	jal	printboard	# printboard(board[])
-
+	jal	print_display	# printboard(board[])
 
 	li 	$v0, 10		# set system call to exit
 	syscall
-
 
 
 	.data

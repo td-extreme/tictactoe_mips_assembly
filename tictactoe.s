@@ -144,17 +144,28 @@ getinput:
 	li 	$v0, 4			# set it so system call will print char array
 	syscall
 
-	li 	$v0, 5			# set system call to input int
-	syscall				# the inputed int will be stored in $v0
-					# no need to move returned value as this func will return right after
+	la	$a0, user_input		# set argument 0 to memory address of input buffer
+	li	$a1, 2			# set argument 1 to 2 input
+					# this should result in one character inputed followed by /0
+	li	$v0, 8
+	syscall
+	lb	$t0, 0($a0)		# load the byte that was inputed into $t0
+	addi	$v0, $t0, -48		# convert ascii value into int and store in return
+	li	$t1, 49
+	blt	$t0, $t1 getinput	# if input is less than 1 get new input
+	li	$t1, 57
+	bgt	$t0, $t1 getinput	# if input is greater than 9 get new input
 	jr 	$ra			# return
 
 playmove:
 	addi 	$sp, $sp -8
 	sw	$ra, 0($sp)
 	sw	$s0, 4($sp)
-
 	move 	$s0, $a0	# placed current player agrument into saved reg 0
+
+invalid_move:
+
+
 	jal 	getinput	# call getinput return value will be in $v0
 	addi	$t3, $v0, -1	# set $t3 to the user input minus 1
 
@@ -166,6 +177,11 @@ playmove:
 	la	$t4, board	# load the address of board array into $t4
 
 	add	$t2, $t2, $t4	# add the offset of user choice to the base address of the array
+
+	lw	$t4, 0($t2)	# load the space that we want to replace into $t4
+	li	$t5, 32		# load the value for blank into $t5
+
+	bne	$t4, $t5 invalid_move	# if new space we want to play != ' ' goto invalid_move
 
 	sw	$s0, 0($t2)	# write the current player into the address in $t2
 
@@ -232,7 +248,7 @@ main:
 	la 	$t1, playero	# load memmory address of playero into $t1
 	lw	$s2, 0($t1)	# $s2 is player o
 
-	move	$s0, $s2	# $s0 is currentplayer & starts as X
+	move	$s0, $s1	# $s0 is currentplayer & starts as X
 
 loop:
 
@@ -268,6 +284,7 @@ boardup:	.asciiz	"|"
 newline:	.asciiz "\n"
 boardmiddle:	.asciiz "---|---|---"
 
+user_input:	.space 2
 str_getmovepromt:	.asciiz "\nPlease enter a move: "
 
 playerx:	.word 'X'

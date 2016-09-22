@@ -48,6 +48,55 @@
 	.text
 	.globl main
 
+
+check_for_three_in_a_row:
+	
+	lw	$t0, 0($a0)	# load first index of row
+	lw	$t1, 4($a0)	# load second index of row
+	lw	$t2, 8($a0)	# load third index of row
+	
+	la	$t3, blank	# load address of space
+	lw	$t4, 0($t3)	# load value of space 
+	
+
+	beq	$t0, $t4, not_three_in_row	#if space one is blank, can't be three_in_row
+	bne	$t0, $t1, not_three_in_row	#if $t0 != $t1 != $2 goto not_three_in_row
+	bne	$t1, $t2, not_three_in_row
+	
+	move	$v0, $t0
+
+	jr $ra	
+
+not_three_in_row:
+
+	move	$v0, $zero
+	jr 	$ra
+	
+check_for_winner:
+	addi	$sp, $sp -8
+	sw 	$ra, 0($sp)
+	sw	$s0, 4($sp)
+	move 	$s0, $a0	
+	
+	jal	check_for_three_in_a_row		
+	bnez	$v0, found_winner
+	
+	addi	$a0, $s0, 12
+	jal	check_for_three_in_a_row		
+	bnez	$v0, found_winner
+		
+	addi	$a0, $s0, 24
+	jal	check_for_three_in_a_row		
+	bnez	$v0, found_winner
+		
+found_winner:
+					
+	lw	$ra, 0($sp)
+	lw	$s0, 4($sp)
+	addi	$sp, $sp 8
+	jr	$ra
+
+
 print_new_line:
 	li 	$v0, 4
 	la 	$a0, newline
@@ -85,7 +134,7 @@ printboard_row:
 	sw	$ra, 0($sp)
 	sw	$s0, 4($sp)	# add $s0 to the stack
 
-	move 	$s0, $a0	# Move argument 0 (address of start of row) into $t0
+	move 	$s0, $a0	# Move argument 0 (address of start of row) into $s0
 
 	jal	print_space
 
@@ -261,6 +310,10 @@ loop:
 
 	ble	$s7, $zero, exitloop	# if moves_remaing <= 0 goto exit the loop
 
+	la	$a0, board
+	jal	check_for_winner
+	bnez	$v0, exitloop
+
 	move	$a0, $s0
 	move	$a1, $s1
 	move 	$a2, $s2
@@ -289,6 +342,7 @@ str_getmovepromt:	.asciiz "\nPlease enter a move: "
 
 playerx:	.word 'X'
 playero:	.word 'O'
+blank:		.word ' '
 
 board:		.word ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '
 key:		.word '1', '2', '3', '4', '5', '6', '7', '8', '9'

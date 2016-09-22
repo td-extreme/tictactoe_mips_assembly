@@ -48,6 +48,34 @@
 	.text
 	.globl main
 
+check_for_three_diagonal:
+
+	lw	$t0, 0($a0)
+	lw	$t1, 16($a0)
+	lw	$t2, 32($a0)
+	
+	la	$t3, blank
+	lw	$t4, 0($t3)
+	
+	lw	$t5, 8($a0)
+	lw	$t6, 24($a0)
+	
+	beq	$t1, $t4, not_three_in_row	#if space one is blank, can't be three_in_row
+
+	bne	$t0, $t1, check_diagonal_ascending	#if $t0 != $t1 != $2 goto not_three_in_row
+	bne	$t1, $t2, check_diagonal_ascending
+
+	j	found_diagonal_winner
+
+check_diagonal_ascending:
+
+	bne	$t5, $t1, not_three_in_row	#if $t0 != $t1 != $2 goto not_three_in_row
+	bne	$t1, $t6, not_three_in_row
+	
+found_diagonal_winner:
+	move	$v0, $t1
+
+	jr $ra	
 
 check_for_three_in_a_row:
 	
@@ -67,11 +95,30 @@ check_for_three_in_a_row:
 
 	jr $ra	
 
+	
+check_for_three_in_a_col:
+
+	lw	$t0, 0($a0)
+	lw	$t1, 12($a0)
+	lw	$t2, 24($a0)
+	
+	la	$t3, blank
+	lw	$t4, 0($t3)
+	
+	beq	$t0, $t4, not_three_in_row	#if space one is blank, can't be three_in_row
+	bne	$t0, $t1, not_three_in_row	#if $t0 != $t1 != $2 goto not_three_in_row
+	bne	$t1, $t2, not_three_in_row
+	
+	move	$v0, $t0
+
+	jr $ra	
+
 not_three_in_row:
 
 	move	$v0, $zero
 	jr 	$ra
-	
+
+
 check_for_winner:
 	addi	$sp, $sp -8
 	sw 	$ra, 0($sp)
@@ -88,6 +135,23 @@ check_for_winner:
 	addi	$a0, $s0, 24
 	jal	check_for_three_in_a_row		
 	bnez	$v0, found_winner
+
+	move	$a0, $s0
+	jal	check_for_three_in_a_col		
+	bnez	$v0, found_winner
+	
+	addi	$a0, $s0, 4
+	jal	check_for_three_in_a_col		
+	bnez	$v0, found_winner
+		
+	addi	$a0, $s0, 8
+	jal	check_for_three_in_a_col		
+	bnez	$v0, found_winner
+	
+	move	$a0, $s0
+	jal	check_for_three_diagonal
+	bnez	$v0, found_winner
+		
 		
 found_winner:
 					

@@ -50,19 +50,19 @@
 
 check_for_three_diagonal:
 
-	lw	$t0, 0($a0)
-	lw	$t1, 16($a0)
-	lw	$t2, 32($a0)
+	lw	$t0, 0($a0)	#space 1
+	lw	$t1, 16($a0)	#space 5
+	lw	$t2, 32($a0)	#space 9
 	
 	la	$t3, blank
-	lw	$t4, 0($t3)
+	lw	$t4, 0($t3)	# blank ' '
 	
-	lw	$t5, 8($a0)
-	lw	$t6, 24($a0)
+	lw	$t5, 8($a0)	#space 3
+	lw	$t6, 24($a0)	#space 7
 	
-	beq	$t1, $t4, not_three_in_row	#if space one is blank, can't be three_in_row
+	beq	$t1, $t4, not_three_in_row	#if center is blank, can't be three_in_row
 
-	bne	$t0, $t1, check_diagonal_ascending	#if $t0 != $t1 != $2 goto not_three_in_row
+	bne	$t0, $t1, check_diagonal_ascending	#if $t0 != $t1 != $2 check other diagonal
 	bne	$t1, $t2, check_diagonal_ascending
 
 	j	found_diagonal_winner

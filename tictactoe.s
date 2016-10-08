@@ -62,14 +62,14 @@ check_for_three_diagonal:
 	
 	beq	$t1, $t4, not_three_in_row	#if center is blank, can't be three_in_row
 
-	bne	$t0, $t1, check_diagonal_ascending	#if $t0 != $t1 != $2 check other diagonal
+	bne	$t0, $t1, check_diagonal_ascending	#if $t0 != $t1 != $t2 check other diagonal
 	bne	$t1, $t2, check_diagonal_ascending
 
 	j	found_diagonal_winner
 
 check_diagonal_ascending:
 
-	bne	$t5, $t1, not_three_in_row	#if $t0 != $t1 != $2 goto not_three_in_row
+	bne	$t5, $t1, not_three_in_row	#if $t5 != $t1 != $t6 goto not_three_in_row
 	bne	$t1, $t6, not_three_in_row
 	
 found_diagonal_winner:
@@ -83,7 +83,7 @@ check_for_three_in_a_row:
 	lw	$t1, 4($a0)	# load second index of row
 	lw	$t2, 8($a0)	# load third index of row
 	
-	la	$t3, blank	# load address of space
+	la	$t3, blank	# load address of space 
 	lw	$t4, 0($t3)	# load value of space 
 	
 
@@ -91,7 +91,7 @@ check_for_three_in_a_row:
 	bne	$t0, $t1, not_three_in_row	#if $t0 != $t1 != $2 goto not_three_in_row
 	bne	$t1, $t2, not_three_in_row
 	
-	move	$v0, $t0
+	move	$v0, $t0	#return char of winning player
 
 	jr $ra	
 
@@ -109,13 +109,13 @@ check_for_three_in_a_col:
 	bne	$t0, $t1, not_three_in_row	#if $t0 != $t1 != $2 goto not_three_in_row
 	bne	$t1, $t2, not_three_in_row
 	
-	move	$v0, $t0
+	move	$v0, $t0	#return char of winning player
 
 	jr $ra	
 
 not_three_in_row:
 
-	move	$v0, $zero
+	move	$v0, $zero	#return zero  
 	jr 	$ra
 
 
@@ -125,34 +125,33 @@ check_for_winner:
 	sw	$s0, 4($sp)
 	move 	$s0, $a0	
 	
-	jal	check_for_three_in_a_row		
+	jal	check_for_three_in_a_row	# check row 1		
 	bnez	$v0, found_winner
 	
-	addi	$a0, $s0, 12
+	addi	$a0, $s0, 12			# check row 2
 	jal	check_for_three_in_a_row		
 	bnez	$v0, found_winner
 		
-	addi	$a0, $s0, 24
+	addi	$a0, $s0, 24			# check row 3
 	jal	check_for_three_in_a_row		
 	bnez	$v0, found_winner
 
-	move	$a0, $s0
+	move	$a0, $s0			# check col 1
 	jal	check_for_three_in_a_col		
 	bnez	$v0, found_winner
 	
-	addi	$a0, $s0, 4
+	addi	$a0, $s0, 4			# check col 2
 	jal	check_for_three_in_a_col		
 	bnez	$v0, found_winner
 		
-	addi	$a0, $s0, 8
+	addi	$a0, $s0, 8			# check col 3
 	jal	check_for_three_in_a_col		
 	bnez	$v0, found_winner
 	
-	move	$a0, $s0
+	move	$a0, $s0			# check both diagonal directions
 	jal	check_for_three_diagonal
-	bnez	$v0, found_winner
-		
-		
+	bnez	$v0, found_winner		# technically this check doesn't need to be here
+				
 found_winner:
 					
 	lw	$ra, 0($sp)
@@ -189,7 +188,7 @@ printboard_middle:
 	jal	print_new_line
 
 	lw	$ra, 0($sp)	# restore return address
-	addi	$sp, $sp, 4
+	addi	$sp, $sp, 4	# adjust stack to location prior to function call
 	jr 	$ra
 
 printboard_row:
@@ -258,8 +257,8 @@ getinput:
 	syscall
 
 	la	$a0, user_input		# set argument 0 to memory address of input buffer
-	li	$a1, 2			# set argument 1 to 2 input
-					# this should result in one character inputed followed by /0
+	li	$a1, 2			# set argument 1 to value of 2 so system call gets 2 chars
+					# this should result in one character inputed followed by NULL (/0)
 	li	$v0, 8
 	syscall
 	lb	$t0, 0($a0)		# load the byte that was inputed into $t0
@@ -285,7 +284,9 @@ invalid_move:
 				# calcuate the memmory index of the board array to change
 	li 	$t1, 4		# set $t1 to 4
 	mult 	$t3, $t1	# multiple user choice by 4
-	mflo	$t2		# multiplication gets put into a special register move the results into $t2
+	mflo	$t2		# multiplication gets put into a special register
+				# mflo moves the results into $t2
+				
 
 	la	$t4, board	# load the address of board array into $t4
 
